@@ -1,6 +1,8 @@
 <div align="center">
+
 # Advent of Code 2023
 My solutions in Rust!
+
 </div>
 
 ## Usage
