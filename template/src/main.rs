@@ -13,5 +13,10 @@ mod tests {
 }
 
 fn main() {
-    print!("{}", solution::solution(include_str!("../data/input.txt")));
+    let start = std::time::Instant::now();
+    let answer = solution::solution(include_str!("../data/input.txt"));
+    let duration = start.elapsed();
+
+    println!("Done in {:?}", duration);
+    print!("{}", answer);
 }
