@@ -25,11 +25,19 @@ validate day:
     echo -e "${GREEN}Running solution on puzzle input${NO_COLOR}"
     cargo run -q -p 'day{{ day }}' {{ flags }}
 
-@new day from="": (validate day)
+new day from="": (validate day)
+    #!sh
     echo -e "${GREEN}Generating directory ./day{{ day }}${NO_COLOR}"
     cargo init -q 'day{{ day }}'
     cp -r template/* 'day{{ day }}/'
-    if [ "{{ from }}" != "" ]; then just transfer {{ from }} {{ day }}; fi
+    if [ "{{ from }}" != "" ]; then
+        just transfer {{ from }} {{ day }}
+    else
+        echo -e "${PURPLE}Don't forget to populate ./day{{ day }}/data/input.txt${NO_COLOR}"
+        echo -e "${PURPLE}Don't forget to populate ./day{{ day }}/data/example.txt${NO_COLOR}"
+        echo -e "${PURPLE}Don't forget to populate ./day{{ day }}/data/answer.txt${NO_COLOR}"
+    fi
+    echo -e "${PURPLE}Write your code in ./day{{ day }}/src/solution.rs${NO_COLOR}"
 
 @transfer day to: (validate day) (validate to)
     echo -e "${GREEN}Transferring base from day{{ day }} to day{{ to }}${NO_COLOR}"
@@ -37,4 +45,3 @@ validate day:
     cp "day{{ day }}/data/example.txt" "day{{ to }}/data/example.txt"
     cp "day{{ day }}/data/input.txt" "day{{ to }}/data/input.txt"
     echo -e "${PURPLE}Don't forget to populate ./day{{ to }}/data/answer.txt${NO_COLOR}"
-    
