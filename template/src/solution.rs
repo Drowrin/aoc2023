@@ -1,3 +1,3 @@
-pub fn solution(input: &str) -> String {
+pub fn solution(input: &str) -> impl ToString {
     input.to_string()
 }

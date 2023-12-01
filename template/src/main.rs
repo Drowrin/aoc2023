@@ -6,7 +6,7 @@ mod tests {
     #[test]
     fn example() {
         assert_eq!(
-            solution::solution(include_str!("../data/example.txt")),
+            solution::solution(include_str!("../data/example.txt")).to_string(),
             include_str!("../data/answer.txt")
         );
     }
@@ -18,5 +18,5 @@ fn main() {
     let duration = start.elapsed();
 
     println!("Done in {:?}", duration);
-    print!("{}", answer);
+    print!("{}", answer.to_string());
 }
