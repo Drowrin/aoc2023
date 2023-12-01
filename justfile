@@ -41,6 +41,7 @@ new day from="": (validate day)
 
 @transfer day to: (validate day) (validate to)
     echo -e "${GREEN}Transferring base from day{{ day }} to day{{ to }}${NO_COLOR}"
+    cp "day{{ day }}/src/main.rs" "day{{ to }}/src/main.rs"
     cp "day{{ day }}/src/solution.rs" "day{{ to }}/src/solution.rs"
     cp "day{{ day }}/data/example.txt" "day{{ to }}/data/example.txt"
     cp "day{{ day }}/data/input.txt" "day{{ to }}/data/input.txt"
