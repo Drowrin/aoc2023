@@ -19,7 +19,7 @@ validate day:
 
 @test day: (validate day)
     echo -e "${GREEN}Testing solution on example input${NO_COLOR}"
-    cargo test -q -p day{{ day }}
+    cargo test -q -p day{{ day }} -- --nocapture
 
 @run day flags="": (validate day) (test day)
     echo -e "${GREEN}Running solution on puzzle input${NO_COLOR}"
