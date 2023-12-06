@@ -103,7 +103,7 @@ pub fn solution(input: &str) -> impl ToString {
                 processed_ranges
             })
         })
-        .min_by_key(|l| l.0)
+        .map(|l| l.0)
+        .min()
         .unwrap()
-        .0
 }
