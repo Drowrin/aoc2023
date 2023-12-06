@@ -29,23 +29,79 @@ pub fn solution(input: &str) -> impl ToString {
         .map(|s| s.parse::<u32>().unwrap())
         .chunks(2)
         .into_iter()
-        .flat_map(|chunk| {
-            let (start, len) = chunk.collect_tuple().unwrap();
-            start..(start + len)
+        .map(|chunk| {
+            let (s, l) = chunk.collect_tuple().unwrap();
+            vec![(s, s + l - 1)]
         })
-        .map(|initial_seed| {
-            maps.iter().fold(initial_seed, |seed, map| {
-                map.into_iter()
-                    .find_map(|(src, dst, len)| {
-                        if seed < *src || seed >= (src + len) {
-                            None
-                        } else {
-                            Some(dst + seed - src)
+        .flat_map(|initial_ranges| {
+            maps.clone()
+                .into_iter()
+                .fold(initial_ranges, |ranges, map| {
+                    let mut remaining_ranges = ranges;
+                    let mut processed_ranges = vec![];
+
+                    for (map_src, map_dst, map_len) in map {
+                        let mut new_remaining = vec![];
+
+                        for (range_start, range_end) in remaining_ranges.clone() {
+                            if range_start >= map_src + map_len {
+                                // start is after map, entire range gets reprocessed
+                                new_remaining.push((range_start, range_end));
+                                continue;
+                            }
+                            if range_end < map_src {
+                                // end is before map, entire range gets reprocessed
+                                new_remaining.push((range_start, range_end));
+                                continue;
+                            }
+                            if range_start >= map_src {
+                                // start is within map
+                                if range_end < map_src + map_len {
+                                    // entire range is within map
+                                    // entire range gets mapped
+                                    processed_ranges.push((
+                                        map_dst + range_start - map_src,
+                                        map_dst + range_end - map_src,
+                                    ));
+                                } else {
+                                    // end is after map
+                                    // start of range until end of map gets mapped
+                                    processed_ranges.push((
+                                        map_dst + range_start - map_src,
+                                        map_dst + map_len - 1,
+                                    ));
+                                    // end of map until end of range goes back into unmapped ranges
+                                    new_remaining.push((map_src + map_len, range_end));
+                                }
+                            } else {
+                                // end is after map start
+                                if range_end >= map_src + map_len {
+                                    // range covers entire map
+                                    // map range gets mapped
+                                    processed_ranges.push((map_dst, map_dst + map_len - 1));
+                                    // end of map until end of range goes back into unmapped ranges
+                                    new_remaining.push((map_src + map_len, range_end));
+                                    // start of range until start of map goes back into unmapped ranges
+                                    new_remaining.push((range_start, map_src - 1));
+                                } else {
+                                    // end is within map
+                                    // start of map until end of range gets mapped
+                                    processed_ranges.push((map_dst, map_dst + range_end - map_src));
+                                    // start of range until start of map goes back into unmapped ranges
+                                    new_remaining.push((range_start, map_src - 1));
+                                }
+                            }
                         }
-                    })
-                    .unwrap_or(seed)
-            })
+
+                        remaining_ranges = new_remaining;
+                    }
+
+                    processed_ranges.extend(remaining_ranges);
+
+                    processed_ranges
+                })
         })
-        .min()
+        .min_by_key(|l| l.0)
         .unwrap()
+        .0
 }
