@@ -92,21 +92,17 @@ pub fn solution(input: &str) -> impl ToString {
     let s_row = start_ind / columns;
     let s_col = start_ind % columns;
 
-    let (starter, start_dir) = vec![Direction::N, Direction::E, Direction::S, Direction::W]
-        .iter()
+    let start_dir = vec![Direction::N, Direction::E, Direction::S, Direction::W]
+        .into_iter()
         .flat_map(|d| {
-            let (pos, tile) = d.get(&grid, (s_row, s_col))?;
-            Some((d, pos, tile))
+            let (_, tile) = d.get(&grid, (s_row, s_col))?;
+            next(tile, d)?;
+            Some(d)
         })
-        .filter(|(_, _, tile)| match tile {
-            '.' => false,
-            _ => true,
-        })
-        .flat_map(|(d, pos, tile)| Some((pos, next(tile, *d)?)))
         .next()
         .unwrap();
 
-    let mut loop_positions = vec![(s_row, s_col), starter];
+    let mut loop_positions = vec![(s_row, s_col)];
     let mut next_dir = start_dir;
 
     loop {

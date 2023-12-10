@@ -92,52 +92,17 @@ pub fn solution(input: &str) -> impl ToString {
     let s_row = start_ind / columns;
     let s_col = start_ind % columns;
 
-    let starters = vec![Direction::N, Direction::E, Direction::S, Direction::W]
+    let start_dir = vec![Direction::N, Direction::E, Direction::S, Direction::W]
         .into_iter()
         .flat_map(|d| {
-            let (pos, tile) = d.get(&grid, (s_row, s_col))?;
-            Some((d, pos, tile))
-        })
-        .filter(|(_, _, tile)| match tile {
-            '.' => false,
-            _ => true,
-        })
-        .collect::<Vec<_>>();
-
-    let mut valid_starters = starters.iter().flat_map(|(d, _, tile)| {
-        if next(*tile, *d).is_some() {
+            let (_, tile) = d.get(&grid, (s_row, s_col))?;
+            next(tile, d)?;
             Some(d)
-        } else {
-            None
-        }
-    });
-
-    let start_shape = match (
-        valid_starters.next().unwrap(),
-        valid_starters.next().unwrap(),
-    ) {
-        (Direction::N, Direction::E) => 'L',
-        (Direction::N, Direction::S) => '|',
-        (Direction::N, Direction::W) => 'J',
-        (Direction::E, Direction::N) => 'L',
-        (Direction::E, Direction::S) => 'F',
-        (Direction::E, Direction::W) => '-',
-        (Direction::S, Direction::N) => '|',
-        (Direction::S, Direction::E) => 'F',
-        (Direction::S, Direction::W) => '7',
-        (Direction::W, Direction::N) => 'J',
-        (Direction::W, Direction::E) => '-',
-        (Direction::W, Direction::S) => '7',
-        _ => unreachable!(),
-    };
-
-    let (starter, start_dir) = starters
-        .into_iter()
-        .flat_map(|(d, pos, tile)| Some((pos, next(tile, d)?)))
+        })
         .next()
         .unwrap();
 
-    let mut loop_positions = vec![(s_row, s_col), starter];
+    let mut loop_positions = vec![(s_row, s_col)];
     let mut next_dir = start_dir;
 
     loop {
@@ -152,6 +117,14 @@ pub fn solution(input: &str) -> impl ToString {
             next_dir = next(tile, next_dir).unwrap();
         }
     }
+
+    let start_shape = match (start_dir, next_dir.opposite()) {
+        (Direction::N, Direction::E) => 'L',
+        (Direction::E, Direction::N) => 'L',
+        (Direction::E, Direction::S) => 'F',
+        (Direction::S, Direction::E) => 'F',
+        _ => 'S',
+    };
 
     let mut counter = 0;
     for r in 0..grid.len() {
@@ -171,11 +144,11 @@ pub fn solution(input: &str) -> impl ToString {
                         span_start = Some('F');
                     }
                     'S' => match start_shape {
-                        'F' => {
-                            span_start = Some('F');
-                        }
                         'L' => {
                             span_start = Some('L');
+                        }
+                        'F' => {
+                            span_start = Some('F');
                         }
                         _ => {}
                     },
