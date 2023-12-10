@@ -1,4 +1,4 @@
-#[derive(Clone, Copy, PartialEq, Debug)]
+#[derive(Clone, Copy)]
 enum Direction {
     N,
     E,
@@ -9,9 +9,9 @@ enum Direction {
 impl Direction {
     fn get(
         self,
-        grid: &Vec<Vec<Tile>>,
+        grid: &Vec<Vec<char>>,
         (row, col): (usize, usize),
-    ) -> Option<((usize, usize), Tile)> {
+    ) -> Option<((usize, usize), char)> {
         let (n_row, n_col) = match self {
             Direction::N => {
                 if row == 0 {
@@ -44,50 +44,47 @@ impl Direction {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-enum Tile {
-    Pipe(Direction, Direction),
-    Ground,
-    Start,
-}
-
-impl Tile {
-    fn from_char(c: &char) -> Self {
-        match c {
-            '|' => Self::Pipe(Direction::N, Direction::S),
-            '-' => Self::Pipe(Direction::W, Direction::E),
-            'L' => Self::Pipe(Direction::N, Direction::E),
-            'J' => Self::Pipe(Direction::N, Direction::W),
-            '7' => Self::Pipe(Direction::S, Direction::W),
-            'F' => Self::Pipe(Direction::S, Direction::E),
-            '.' => Self::Ground,
-            'S' => Self::Start,
-            _ => panic!("unrecognized character {c}"),
-        }
-    }
-
-    fn next(&self, from: Direction) -> Result<Direction, String> {
-        match self {
-            Tile::Pipe(d1, d2) => match from.opposite() {
-                f if f == *d1 => Ok(*d2),
-                f if f == *d2 => Ok(*d1),
-                f => Err(format!("direction {f:?} did not match {d1:?} or {d2:?}")),
-            },
-            Tile::Ground => Err(format!("Tried to get next direction for ground")),
-            Tile::Start => Err(format!("Tried to get next direction for start")),
-        }
+fn next(tile: char, from: Direction) -> Option<Direction> {
+    let from = from.opposite();
+    match tile {
+        '|' => match from {
+            Direction::N => Some(Direction::S),
+            Direction::S => Some(Direction::N),
+            _ => None,
+        },
+        '-' => match from {
+            Direction::W => Some(Direction::E),
+            Direction::E => Some(Direction::W),
+            _ => None,
+        },
+        'L' => match from {
+            Direction::N => Some(Direction::E),
+            Direction::E => Some(Direction::N),
+            _ => None,
+        },
+        'J' => match from {
+            Direction::N => Some(Direction::W),
+            Direction::W => Some(Direction::N),
+            _ => None,
+        },
+        '7' => match from {
+            Direction::W => Some(Direction::S),
+            Direction::S => Some(Direction::W),
+            _ => None,
+        },
+        'F' => match from {
+            Direction::E => Some(Direction::S),
+            Direction::S => Some(Direction::E),
+            _ => None,
+        },
+        _ => None,
     }
 }
 
 pub fn solution(input: &str) -> impl ToString {
-    let o_grid: Vec<Vec<char>> = input
+    let grid: Vec<Vec<char>> = input
         .split("\n")
         .map(|line| line.chars().collect())
-        .collect();
-
-    let grid: Vec<Vec<Tile>> = o_grid
-        .iter()
-        .map(|line| line.iter().map(Tile::from_char).collect())
         .collect();
 
     let start_ind = input.find('S').unwrap();
@@ -102,15 +99,19 @@ pub fn solution(input: &str) -> impl ToString {
             Some((d, pos, tile))
         })
         .filter(|(_, _, tile)| match tile {
-            Tile::Pipe(_, _) => true,
-            _ => false,
+            '.' => false,
+            _ => true,
         })
         .collect::<Vec<_>>();
 
-    let mut valid_starters =
-        starters
-            .iter()
-            .flat_map(|(d, _, tile)| if tile.next(*d).is_ok() { Some(d) } else { None });
+    let mut valid_starters = starters.iter().flat_map(|(d, _, tile)| {
+        if next(*tile, *d).is_some() {
+            Some(d)
+        } else {
+            None
+        }
+    });
+
     let start_shape = match (
         valid_starters.next().unwrap(),
         valid_starters.next().unwrap(),
@@ -132,11 +133,7 @@ pub fn solution(input: &str) -> impl ToString {
 
     let (starter, start_dir) = starters
         .into_iter()
-        .flat_map(
-            |(d, pos, tile)| -> Result<((usize, usize), Direction), String> {
-                Ok((pos, tile.next(d)?))
-            },
-        )
+        .flat_map(|(d, pos, tile)| Some((pos, next(tile, d)?)))
         .next()
         .unwrap();
 
@@ -148,22 +145,22 @@ pub fn solution(input: &str) -> impl ToString {
             .get(&grid, *loop_positions.last().unwrap())
             .unwrap();
 
-        if let Tile::Start = tile {
+        if pos == loop_positions[0] {
             break;
         } else {
             loop_positions.push(pos);
-            next_dir = tile.next(next_dir).unwrap();
+            next_dir = next(tile, next_dir).unwrap();
         }
     }
 
     let mut counter = 0;
-    for r in 0..o_grid.len() {
+    for r in 0..grid.len() {
         let mut inside = false;
         let mut span_start: Option<char> = None;
 
-        for c in 0..o_grid[0].len() {
+        for c in 0..grid[0].len() {
             if loop_positions.contains(&(r, c)) {
-                match o_grid[r][c] {
+                match grid[r][c] {
                     '|' => {
                         inside = !inside;
                     }
