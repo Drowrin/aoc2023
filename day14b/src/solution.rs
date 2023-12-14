@@ -20,14 +20,14 @@ fn rotate(grid: &mut Vec<Vec<char>>) {
 }
 
 fn cycle(grid: &mut Vec<Vec<char>>) {
-    shift_up(grid);
+    shift_up(grid); // north
     rotate(grid);
-    shift_up(grid);
+    shift_up(grid); // west
     rotate(grid);
-    shift_up(grid);
+    shift_up(grid); // south
     rotate(grid);
-    shift_up(grid);
-    rotate(grid);
+    shift_up(grid); // east
+    rotate(grid); // put north back up top
 }
 
 fn load(grid: &Vec<Vec<char>>) -> usize {
@@ -44,13 +44,8 @@ pub fn solution(input: &str) -> impl ToString {
     let mut states = vec![];
 
     loop {
-        // I honestly don't know why, but any cycles discovered earlier than this don't work
-        // even though a cycle should be a cycle, so the smallest cycle should work
-        // TODO: revisit later?
-        if states.len() > 568 {
-            if let Some(start) = states.iter().position(|g| *g == grid) {
-                return load(&states[1000000000 % (states.len() - start)]);
-            }
+        if let Some(start) = states.iter().position(|g| *g == grid) {
+            return load(&states[(1000000000 - start) % (states.len() - start) + start]);
         }
         states.push(grid.clone());
         cycle(&mut grid);
