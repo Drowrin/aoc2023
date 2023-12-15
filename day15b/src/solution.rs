@@ -1,4 +1,4 @@
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 struct Lens<'s> {
     label: &'s str,
     length: usize,
